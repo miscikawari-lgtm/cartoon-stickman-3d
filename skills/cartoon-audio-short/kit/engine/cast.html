@@ -1,0 +1,38 @@
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;background:#e9e6df}canvas{display:block}</style></head>
+<body><canvas id="c"></canvas>
+<script>window.addEventListener('error',e=>{window.err=String(e.message);console.log('ERR '+e.message)});</script>
+<script type="module">
+// Preview sheets (no 3D):  cast.html?mode=cast   every outfit, full body
+//                          cast.html?mode=expr   every expression on one outfit (?who=civA), head close-ups
+//                          add &keys=a,b,c to show only those outfits (cast / heads)
+//                          cast.html?mode=heads  every outfit as a head close-up
+//                          cast.html?mode=tex    every painted texture as a swatch
+import * as T from './toon.js';
+import * as P from './paint.js';
+const q = new URLSearchParams(location.search), mode = q.get('mode') || 'cast';
+const c = document.getElementById('c'), g = c.getContext('2d');
+const label = (t, x, y) => { g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#222'; g.font = '15px sans-serif'; g.textAlign = 'center'; g.fillText(t, x, y); };
+const cell = (i, cols, w, h, draw, name) => {
+  const x = (i % cols) * w, y = Math.floor(i / cols) * (h + 22);
+  g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.beginPath(); g.rect(x, y, w, h); g.clip(); g.fillStyle = '#d7e3ef'; g.fillRect(x, y, w, h);
+  g.fillStyle = '#9bbf7a'; g.fillRect(x, y + h * 0.9, w, h * 0.1); draw(x, y); g.restore(); label(name, x + w / 2, y + h + 16);
+};
+if (mode === 'cast' || mode === 'expr' || mode === 'heads') {
+  const keys = q.get('keys') ? q.get('keys').split(',') : mode === 'cast' || mode === 'heads' ? Object.keys(T.OUTFITS) : (q.get('exprs') || 'neutral,stern,grin,laugh,whistle,nervous,shock,relief,dazed,pained,smile,smile_closed,lick,snore,stubborn,squint,sad,angry,smug,wink,worried,proud,cheeky,awe').split(',');
+  const who = q.get('who') || 'civA', cols = mode === 'cast' ? 7 : 8, w = mode === 'cast' ? 210 : 170, h = mode === 'cast' ? 350 : 190;
+  c.width = cols * w; c.height = Math.ceil(keys.length / cols) * (h + 22);
+  keys.forEach((k, i) => cell(i, cols, w, h, (x, y) => {
+    const s = mode === 'cast' ? 0.35 : 0.62;
+    g.setTransform(s, 0, 0, s, x + (w - 600 * s) / 2, mode === 'cast' ? y + 2 : y - 175 * s);
+    const p = new T.Pen(g);
+    if (mode === 'cast') T.romanFront(p, k, { expr: 'smile', seed: (i * 7) % 20 + 3 });
+    else if (mode === 'heads') T.romanFront(p, k, { expr: 'smile', seed: (i * 7) % 20 + 3, blink: 0 });
+    else T.romanFront(p, who, { expr: k, seed: 5, blink: 0 });
+  }, k));
+} else {
+  const names = Object.keys(P).filter((n) => !['rng', 'tex', 'radial', 'banner', 'helmetInside', 'mossy'].includes(n));
+  const cols = 6, w = 200, h = 200; c.width = cols * w; c.height = Math.ceil(names.length / cols) * (h + 22);
+  names.forEach((n, i) => cell(i, cols, w, h, (x, y) => { try { const cv = P[n](); g.drawImage(cv, x, y, w, h); } catch (e) { g.fillText('err ' + n, x + 10, y + 20); } }, n));
+}
+window.ready = true;
+</script></body></html>

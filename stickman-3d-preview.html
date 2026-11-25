@@ -1,0 +1,16 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  html,body{margin:0;height:100%;overflow:hidden;background:#222}
+  canvas{display:block;width:100vw;height:100vh}
+  #cap{position:fixed;left:0;right:0;bottom:3%;text-align:center;font:700 clamp(14px,4vw,22px) system-ui,sans-serif;color:#3f3247;text-shadow:0 1px 0 #fff8}
+</style></head>
+<body>
+<div id="cap">Preview 3D asli: stickman orisinal (Three.js toon)</div>
+<script>
+addEventListener('error', e => { document.getElementById('cap').textContent = 'ERR: ' + e.message; });
+addEventListener('unhandledrejection', e => { document.getElementById('cap').textContent = 'ERR: ' + e.reason; });
+</script>
+<script src="stickman-3d-preview.bundle.js"></script>
+</body></html>
